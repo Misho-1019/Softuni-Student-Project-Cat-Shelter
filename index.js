@@ -7,8 +7,11 @@ import addBreedPage from "./views/addBreed.html.js";
 import addCatPage from "./views/addCat.html.js";
 
 let cats = [];
+let breeds = [];
 
 initCats();
+
+initBreeds();
 
 const server = http.createServer((req, res) => {
 
@@ -22,15 +25,22 @@ const server = http.createServer((req, res) => {
         req.on('end', () => {
             const data = new URLSearchParams(body)
             
-            cats.push({
-                id: uuid(),
-                ...Object.fromEntries(data.entries()),
-            })
+            if (req.url === '/cats/add-cat') {
+                cats.push({
+                    id: uuid(),
+                    ...Object.fromEntries(data.entries()),
+                })
 
-            saveCats();
+                saveCats();
+            }
+            else if (req.url === '/cats/add-breed') {
+                const dataBreed = Object.fromEntries(data.entries());
+                const breed = dataBreed['breed']
+                
+                breeds.push(breed)
 
-            console.log(cats);
-            
+                saveBreeds();
+            }
 
             res.writeHead(302, {
                 'location': '/',
@@ -65,8 +75,8 @@ const server = http.createServer((req, res) => {
             res.write(addBreedPage())   
             break;
         case '/cats/add-cat': 
-            res.write(addCatPage())   
-            break;
+            res.write(addCatPage(breeds))   
+            break;   
         default:
             res.write('Page Not Found!')
             break;
@@ -80,9 +90,19 @@ async function initCats() {
     cats = JSON.parse(catsJson)
 }
 
+async function initBreeds() {
+    const breedsJson = await fs.readFile('./breed.json', { encoding: 'utf-8' })
+    breeds = JSON.parse(breedsJson)
+}
+
 async function saveCats() {
     const catsJson = JSON.stringify(cats, null, 2)
     await fs.writeFile('./cats.json', catsJson, { encoding: 'utf-8' })
+}
+
+async function saveBreeds() {
+    const breedsJson = JSON.stringify(breeds, null, 2)
+    await fs.writeFile('./breed.json', breedsJson, { encoding: "utf-8" })
 }
 
 server.listen(5000)
