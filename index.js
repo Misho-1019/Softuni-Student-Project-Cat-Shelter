@@ -5,6 +5,8 @@ import homePage from "./views/home/index.html.js";
 import siteCss from "./content/styles/site.css.js";
 import addBreedPage from "./views/addBreed.html.js";
 import addCatPage from "./views/addCat.html.js";
+import editCatPage from "./views/editCat.html.js";
+import catShelterPage from "./views/catShelter.html.js";
 
 let cats = [];
 let breeds = [];
@@ -17,14 +19,14 @@ const server = http.createServer((req, res) => {
 
     if (req.method === 'POST') {
         let body = '';
-        
+
         req.on('data', chunk => {
             body += chunk.toString();
         })
 
         req.on('end', () => {
             const data = new URLSearchParams(body)
-            
+
             if (req.url === '/cats/add-cat') {
                 cats.push({
                     id: uuid(),
@@ -36,7 +38,7 @@ const server = http.createServer((req, res) => {
             else if (req.url === '/cats/add-breed') {
                 const dataBreed = Object.fromEntries(data.entries());
                 const breed = dataBreed['breed']
-                
+
                 breeds.push(breed)
 
                 saveBreeds();
@@ -67,21 +69,44 @@ const server = http.createServer((req, res) => {
         "content-type": 'text/html'
     })
 
-    switch (req.url) {
-        case '/':
-            res.write(homePage(cats))
-            break;
-        case '/cats/add-breed': 
-            res.write(addBreedPage())   
-            break;
-        case '/cats/add-cat': 
-            res.write(addCatPage(breeds))   
-            break;   
-        default:
-            res.write('Page Not Found!')
-            break;
+    let urlPath = req.url.split('/')
+
+    if (req.url === '/') {
+        res.write(homePage(cats))
     }
-    
+    else if (req.url === '/cats/add-breed') {
+        res.write(addBreedPage())
+    }
+    else if (req.url === '/cats/add-cat') {
+        res.write(addCatPage(breeds))
+    }
+    else if (req.url.includes('/cats/edit-cat/')) {
+        const catId = urlPath[urlPath.length - 1];
+
+        let findCat = cats.find(cat => cat.id === catId)
+
+        if (findCat) {
+            res.write(editCatPage(findCat, breeds))
+        } else {
+            res.write('Cat Not Found!')
+        }
+    }
+    else if (req.url.includes('/cats/shelter-cat/')) {
+        const catId = urlPath[urlPath.length - 1]
+
+        let findCat = cats.find(cat => cat.id === catId)
+
+        if (findCat) {
+            res.write(catShelterPage(findCat, breeds))
+        }
+        else {
+            res.write('Cat Not Found!')
+        }
+    }
+    else {
+        res.write('Page Not Found!')
+    }
+
     res.end();
 })
 
