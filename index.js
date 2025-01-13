@@ -61,9 +61,16 @@ const server = http.createServer((req, res) => {
                     saveCats();
                 }
             }
-            // else if (req.url.includes('/cats/edit-cat/')) {
-            //     '???'
-            // }
+            else if (method === 'DELETE' && req.url.includes('/cats/shelter-cat/')) {
+                const catId = req.url.split('/').pop();
+
+                const catIndex = cats.findIndex(cat => cat.id === catId)              
+
+                if (catIndex !== -1) {
+                    cats.splice(catIndex, 1)
+                    saveCats();
+                }
+            }
 
             res.writeHead(302, {
                 'location': '/',
@@ -73,11 +80,6 @@ const server = http.createServer((req, res) => {
         })
 
         return;
-    }
-
-    if (req.method === 'PUT') {
-        console.log('Misho');
-        
     }
 
     if (req.method === 'DELETE' && req.url.includes('/cats/delete-cat/')) {
@@ -143,20 +145,6 @@ const server = http.createServer((req, res) => {
         }
         else {
             res.write('Cat Not Found!')
-        }
-    }
-    else if (req.url.includes('/cats/delete-cat/')) {
-        const catId = req.url.split('/').pop()
-
-        const catIndex = cats.findIndex(cat => cat.id === catId)
-
-        if (catIndex !== -1) {
-            cats.splice(catIndex, 1)
-            saveCats();
-
-            res.writeHead(302, {
-                'location': '/',
-            })
         }
     }
     else {
