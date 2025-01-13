@@ -118,6 +118,23 @@ const server = http.createServer((req, res) => {
     if (req.url === '/') {
         res.write(homePage(cats))
     }
+    else if (req.method === 'GET' && req.url.startsWith('/search')) {
+        
+        const urlObj = new URL(req.url, `http://${req.headers.host}`)
+        const searchQuery = urlObj.searchParams.get('query')?.toLowerCase();
+
+        let filteredCats = cats;
+
+        if (searchQuery) {
+            filteredCats = cats.filter(cat => 
+                                            cat.name.toLowerCase().includes(searchQuery) || 
+                                            cat.description.toLowerCase().includes(searchQuery) || 
+                                            cat.breed.toLowerCase().includes(searchQuery)
+                                        )
+        }
+
+        res.write(homePage(filteredCats))
+    }
     else if (req.url === '/cats/add-breed') {
         res.write(addBreedPage())
     }
