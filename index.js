@@ -26,6 +26,7 @@ const server = http.createServer((req, res) => {
 
         req.on('end', () => {
             const data = new URLSearchParams(body)
+            const method = data.get('_method')
 
             if (req.url === '/cats/add-cat') {
                 cats.push({
@@ -43,6 +44,26 @@ const server = http.createServer((req, res) => {
 
                 saveBreeds();
             }
+            else if (method === 'PUT' && req.url.includes('/cats/edit-cat/')) {
+                const catId = req.url.split('/').pop();
+
+                const findCat = cats.find(cat => cat.id === catId)
+
+                if (findCat) {
+                    console.log(Object.fromEntries(data.entries()));
+                    
+                    
+                    findCat.name = data.get('name') || findCat.name
+                    findCat.description = data.get('description') || findCat.description
+                    findCat.imageUrl = data.get('imageUrl') || findCat.imageUrl
+                    findCat.breed = data.get('breed') || findCat.breed
+                    
+                    saveCats();
+                }
+            }
+            // else if (req.url.includes('/cats/edit-cat/')) {
+            //     '???'
+            // }
 
             res.writeHead(302, {
                 'location': '/',
@@ -52,6 +73,27 @@ const server = http.createServer((req, res) => {
         })
 
         return;
+    }
+
+    if (req.method === 'PUT') {
+        console.log('Misho');
+        
+    }
+
+    if (req.method === 'DELETE' && req.url.includes('/cats/delete-cat/')) {
+        const catId = req.url.split('/').pop()
+
+        const catIndex = cats.findIndex(cat => cat.id === catId)
+
+        if (catIndex !== -1) {
+            cats.splice(catIndex, 1)
+            saveCats();
+
+            res.writeHead(302, {
+                'location': '/',
+            })
+        }
+        return res.end()
     }
 
     if (req.url === '/styles/site.css') {
@@ -101,6 +143,20 @@ const server = http.createServer((req, res) => {
         }
         else {
             res.write('Cat Not Found!')
+        }
+    }
+    else if (req.url.includes('/cats/delete-cat/')) {
+        const catId = req.url.split('/').pop()
+
+        const catIndex = cats.findIndex(cat => cat.id === catId)
+
+        if (catIndex !== -1) {
+            cats.splice(catIndex, 1)
+            saveCats();
+
+            res.writeHead(302, {
+                'location': '/',
+            })
         }
     }
     else {
